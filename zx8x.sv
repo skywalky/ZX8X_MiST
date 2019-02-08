@@ -72,6 +72,7 @@ localparam CONF_STR =
 	"O6,Video frequency,50Hz,60Hz;",
 	"O7,Inverse video,Off,On;",
 	"O9,Scanlines,Off,On;",
+	"O3,Tape sound,ON,OFF;",
 	"T0,Reset;",
 	"V,v1.0.",`BUILD_DATE
 };
@@ -229,6 +230,10 @@ always @(posedge clk_sys) begin
 		mem_size <= status[11:10];
 		tape_ready <= 0;
 	end
+	if(status[3]) begin
+		tape_play2 <= 1'b0;
+	end
+	else tape_play2 <= tape_play;
 end
 
 //////////////////   MEMORY   //////////////////
@@ -524,7 +529,7 @@ sigma_delta_dac #(7) dac_l
 (
 	.CLK(clk_sys),
 	.RESET(reset),
-	.DACin(audio_l[8:1]),
+	.DACin(audio_l[8:1] + {tape_play2, 5'd0}),
 	.DACout(AUDIO_L)
 );
 
@@ -532,7 +537,7 @@ sigma_delta_dac #(7) dac_r
 (
 	.CLK(clk_sys),
 	.RESET(reset),
-	.DACin(audio_r[8:1]),
+	.DACin(audio_r[8:1] + {tape_play2, 5'd0}),
 	.DACout(AUDIO_R)
 );
 ////////////////////   HID   /////////////////////
@@ -542,6 +547,7 @@ wire kbd_n = nIORQ | nRD | addr[0];
 wire [11:1] Fn;
 wire  [2:0] mod;
 wire  [4:0] key_data;
+wire tape_play2;
 
 keyboard kbd( .* );
 
